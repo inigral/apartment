@@ -1,21 +1,68 @@
+# clear default rails db rake tasks
+Rake::Task["db:fixtures:load"].clear
+Rake::Task["db:migrate"].clear
+Rake::Task["db:migrate:status"].clear
+Rake::Task["db:rollback"].clear
+Rake::Task["db:schema:dump"].clear
+Rake::Task["db:schema:load"].clear
+Rake::Task["db:seed"].clear
+Rake::Task["db:setup"].clear
+Rake::Task["db:structure:dump"].clear
+Rake::Task["db:version"].clear
+
 apartment_namespace = namespace :apartment do
 
-  desc "Migrate all multi-tenant databases"
-  task :migrate => 'db:migrate' do
+  task :create => ['db:create', :environment] do
+    # TODO: also create all non-public non-tenant schemas
 
     Apartment.database_names.each do |db|
-      puts("Migrating #{db} database")
-      Apartment::Migrator.migrate db
+      Apartment::Database.create(db, :skip_schema_import => true)
     end
   end
 
+  task :setup => ['db:create', :environment] do
+    Apartment::Database.import_database_schema "public"
+    Apartment::Database.seed "public" if Apartment.seed_after_create
+
+    # TODO: also create all other non-public non-tenant schemas. pass :schema for seeding
+
+    Apartment.database_names.each do |db|
+      Apartment::Database.create(db, schema: "tenant")
+    end
+  end
+
+  task :reset => ['db:drop', :setup]
+
+  desc "Migrate all multi-tenant databases"
+  task :migrate => :environment do
+    # TODO: also migrate all other non-tenant schemas
+    ["public"].each do |db|
+      puts("Migrating #{db} database")
+      Apartment::Migrator.migrate db, db
+    end
+
+    Apartment.database_names.each do |db|
+      puts("Migrating #{db} database")
+      Apartment::Migrator.migrate db, "tenant"
+    end
+
+    apartment_namespace['schema:dump'].invoke
+  end
+
   desc "Seed all multi-tenant databases"
-  task :seed => 'db:seed' do
+  task :seed => :environment do
+    # TODO: also seed all other non-tenant schemas
+    ["public"].each do |db|
+      puts("Seeding #{db} database")
+      Apartment::Database.process(db) do
+        Apartment::Database.seed "public"
+      end
+    end
 
     Apartment.database_names.each do |db|
       puts("Seeding #{db} database")
       Apartment::Database.process(db) do
-        Apartment::Database.seed
+        Apartment::Database.seed "tenant"
       end
     end
   end
@@ -67,4 +114,21 @@ apartment_namespace = namespace :apartment do
 
   end
 
+  namespace :schema do
+
+    task :dump => :environment do
+      FileUtils.mkdir_p "#{Rails.root}/db/schemas"
+
+      # TODO: also dump all other non-tenant schemas
+      ["public"].each do |db|
+        puts("Dumping #{db} database")
+        Apartment::SchemaDumper.dump db, db
+      end
+
+      db = Apartment.database_names.first
+      puts("Dumping tenant database (based on #{db})")
+      Apartment::SchemaDumper.dump db, "tenant"
+    end
+
+  end
 end

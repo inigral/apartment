@@ -46,7 +46,8 @@ namespace :postgres do
   task :build_db do
     %x{ createdb -E UTF8 #{pg_config['database']} -U#{pg_config['username']} } rescue "test db already exists"
     ActiveRecord::Base.establish_connection pg_config
-    ActiveRecord::Migrator.migrate('spec/dummy/db/migrate')
+    ActiveRecord::Base.connection.execute('set search_path=public')
+    ActiveRecord::Migrator.migrate('spec/dummy/db/migrate/public')
   end
 
   desc "drop the PostgreSQL test database"
@@ -65,7 +66,7 @@ namespace :mysql do
   task :build_db do
     %x{ mysqladmin -u #{my_config['username']} create #{my_config['database']} } rescue "test db already exists"
     ActiveRecord::Base.establish_connection my_config
-    ActiveRecord::Migrator.migrate('spec/dummy/db/migrate')
+    ActiveRecord::Migrator.migrate('spec/dummy/db/migrate/public')
   end
 
   desc "drop the MySQL test database"

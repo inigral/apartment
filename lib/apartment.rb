@@ -43,10 +43,15 @@ module Apartment
       @connection_class || ActiveRecord::Base
     end
 
+    # TODO(GC): this isn't used anymore. remove or fix?
     def database_schema_file
       return @database_schema_file if defined?(@database_schema_file)
 
-      @database_schema_file = Rails.root.join('db', 'schema.rb')
+      @database_schema_file = schema_file('tenant')
+    end
+
+    def schema_file(database)
+      Rails.root.join('db', 'schemas', database + '.rb')
     end
 
     # Reset all the config for Apartment
@@ -68,6 +73,7 @@ module Apartment
 
   autoload :Database, 'apartment/database'
   autoload :Migrator, 'apartment/migrator'
+  autoload :SchemaDumper, 'apartment/schema_dumper'
   autoload :Reloader, 'apartment/reloader'
 
   module Adapters

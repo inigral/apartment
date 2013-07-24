@@ -71,12 +71,12 @@ module Apartment
 
       #   Set schema search path to new schema
       #
-      def connect_to_new(database = nil)
+      def connect_to_new(database = nil, options = {})
         return reset if database.nil?
         raise ActiveRecord::StatementInvalid.new unless Apartment.connection.schema_exists? database
 
         @current_database = database.to_s
-        Apartment.connection.schema_search_path = full_search_path
+        Apartment.connection.schema_search_path = full_search_path(options)
 
       rescue *rescuable_exceptions
         raise SchemaNotFound, "One of the following schema(s) is invalid: #{full_search_path}"
@@ -95,9 +95,16 @@ module Apartment
 
       #   Generate the final search path to set including persistent_schemas
       #
-      def full_search_path
-        persistent_schemas = Apartment.persistent_schemas.join(', ')
-        @current_database.to_s + (persistent_schemas.empty? ? "" : ", #{persistent_schemas}")
+      def full_search_path(options = {})
+        db = @current_database.to_s
+        persistent_schemas_list = Apartment.persistent_schemas.join(', ')
+        if options[:skip_persistent] || persistent_schemas_list.empty?
+          db
+        elsif Apartment.persistent_schemas.include? db
+          persistent_schemas_list
+        else
+          "#{db}, #{persistent_schemas_list}"
+        end
       end
     end
   end

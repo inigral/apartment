@@ -36,9 +36,15 @@ shared_examples_for "a schema based apartment adapter" do
   #
   describe "#create" do
 
-    it "should load schema.rb to new schema" do
+    it "should not load schemas/public.rb to new tenant" do
       connection.schema_search_path = schema1
-      connection.tables.should include('companies')
+      connection.tables.should_not include('companies')
+    end
+
+    it "should load schemas/tenant.rb to new tenant" do
+      connection.schema_search_path = schema1
+      connection.tables.should include('books')
+      connection.tables.should include('users')
     end
 
     it "should yield to block if passed and reset" do

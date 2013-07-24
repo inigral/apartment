@@ -13,12 +13,6 @@
 
 ActiveRecord::Schema.define(:version => 20111202022214) do
 
-  create_table "books", :force => true do |t|
-    t.string   "name"
-    t.integer  "pages"
-    t.datetime "published"
-  end
-
   create_table "companies", :force => true do |t|
     t.boolean "dummy"
     t.string  "database"
@@ -39,11 +33,5 @@ ActiveRecord::Schema.define(:version => 20111202022214) do
   end
 
   add_index "delayed_jobs", ["priority", "run_at"], :name => "delayed_jobs_priority"
-
-  create_table "users", :force => true do |t|
-    t.string   "name"
-    t.datetime "birthdate"
-    t.string   "sex"
-  end
 
 end

@@ -15,14 +15,14 @@ module Apartment
       #
       #   @param {String} database Database name
       #
-      def create(database)
+      def create(database, options = {})
         create_database(database)
 
         process(database) do
-          import_database_schema
+          import_database_schema(options[:schema]) unless options[:skip_schema_import]
 
           # Seed data if appropriate
-          seed_data if Apartment.seed_after_create
+          seed_data(options[:schema]) if Apartment.seed_after_create
 
           yield if block_given?
         end
@@ -58,9 +58,9 @@ module Apartment
       #
       #   @param {String?} database Database or schema to connect to
       #
-      def process(database = nil)
+      def process(database = nil, options = {})
         current_db = current_database
-        switch(database)
+        switch(database, options)
         yield if block_given?
 
       ensure
@@ -86,19 +86,28 @@ module Apartment
       #
       #   @param {String} database Database name
       #
-      def switch(database = nil)
+      def switch(database = nil, options = {})
         # Just connect to default db and return
         return reset if database.nil?
 
-        connect_to_new(database)
+        connect_to_new(database, options)
       end
 
       #   Load the rails seed file into the db
       #
-      def seed_data
-        silence_stream(STDOUT){ load_or_abort("#{Rails.root}/db/seeds.rb") } # Don't log the output of seeding the db
+      def seed_data(schema)
+        puts "Seeding #{current_database} with #{schema}"
+        silence_stream(STDOUT){ load_or_abort("#{Rails.root}/db/seeds/#{schema}.rb") } # Don't log the output of seeding the db
       end
       alias_method :seed, :seed_data
+
+      #   Import the database schema
+      #
+      def import_database_schema(schema)
+        ActiveRecord::Schema.verbose = false    # do not log schema load output.
+
+        load_or_abort(Apartment.schema_file(schema))
+      end
 
     protected
 
@@ -142,14 +151,6 @@ module Apartment
         else
           database
         end
-      end
-
-      #   Import the database schema
-      #
-      def import_database_schema
-        ActiveRecord::Schema.verbose = false    # do not log schema load output.
-
-        load_or_abort(Apartment.database_schema_file) if Apartment.database_schema_file
       end
 
       #   Return a new config that is multi-tenanted

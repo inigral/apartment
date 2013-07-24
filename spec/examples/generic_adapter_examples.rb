@@ -18,9 +18,29 @@ shared_examples_for "a generic apartment adapter" do
       database_names.should include(db2)
     end
 
-    it "should load schema.rb to new schema" do
-      subject.process(db1) do
+    it "should load schemas/public.rb to public" do
+      subject.process('public') do
         connection.tables.should include('companies')
+      end
+    end
+
+    it "should not load schemas/tenant.rb to public" do
+      subject.process('public') do
+        connection.tables.should_not include('books')
+        connection.tables.should_not include('users')
+      end
+    end
+
+    it "should not load schemas/public.rb to new tenant" do
+      subject.process(db1) do
+        connection.tables.should_not include('companies')
+      end
+    end
+
+    it "should load schemas/tenant.rb to new tenant" do
+      subject.process(db1) do
+        connection.tables.should include('books')
+        connection.tables.should include('users')
       end
     end
 
