@@ -1,14 +1,24 @@
-# clear default rails db rake tasks
-Rake::Task["db:fixtures:load"].clear
-Rake::Task["db:migrate"].clear
-Rake::Task["db:migrate:status"].clear
-Rake::Task["db:rollback"].clear
-Rake::Task["db:schema:dump"].clear
-Rake::Task["db:schema:load"].clear
-Rake::Task["db:seed"].clear
-Rake::Task["db:setup"].clear
-Rake::Task["db:structure:dump"].clear
-Rake::Task["db:version"].clear
+# TODO(GC): what about these & other unsupported default rails db rake tasks:
+# Rake::Task["db:fixtures:load"]
+# Rake::Task["db:migrate:status"]
+# Rake::Task["db:schema:load"]
+# Rake::Task["db:structure:dump"]
+# Rake::Task["db:version"]
+
+namespace :db do
+  task(:migrate).clear
+  task :migrate => 'apartment:migrate'
+  task(:rollback).clear
+  task :rollback => 'apartment:rollback'
+  task(:setup).clear
+  task :setup => 'apartment:setup'
+  task(:seed).clear
+  task :seed => 'apartment:seed'
+  namespace :schema do
+    task(:dump).clear
+    task :dump => 'apartment:schema:dump'
+  end
+end
 
 apartment_namespace = namespace :apartment do
 
@@ -30,8 +40,6 @@ apartment_namespace = namespace :apartment do
       Apartment::Database.create(db, schema: "tenant")
     end
   end
-
-  task :reset => ['db:drop', :setup]
 
   desc "Migrate all multi-tenant databases"
   task :migrate => :environment do
