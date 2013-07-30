@@ -18,7 +18,7 @@ module Apartment
       def create(database, options = {})
         create_database(database)
 
-        process(database) do
+        process(database, :skip_persistent => true) do
           import_database_schema(options[:schema]) unless options[:skip_schema_import]
 
           # Seed data if appropriate
@@ -105,6 +105,8 @@ module Apartment
       #
       def import_database_schema(schema)
         ActiveRecord::Schema.verbose = false    # do not log schema load output.
+
+        ActiveRecord::Migrator.migrations_path = Apartment::Migrator.migrations_path(schema)
 
         load_or_abort(Apartment.schema_file(schema))
       end

@@ -79,7 +79,7 @@ module Apartment
         Apartment.connection.schema_search_path = full_search_path(options)
 
       rescue *rescuable_exceptions
-        raise SchemaNotFound, "One of the following schema(s) is invalid: #{full_search_path}"
+        raise SchemaNotFound, "One of the following schema(s) is invalid: #{full_search_path(options)}"
       end
 
       #   Create the new schema
