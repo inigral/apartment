@@ -119,3 +119,21 @@ module Apartment
   class DJSerializationError < ApartmentError; end
 
 end
+
+module Apt
+
+  extend self
+
+  def ls
+    Apartment.database_names
+  end
+
+  def cd(database = Apartment.default_schema)
+    Apartment::Database.switch(database.strip)
+  end
+
+  def pwd
+    Apartment::Database.current
+  end
+
+end

@@ -10,21 +10,3 @@ def reload!(print=true)
   Apartment::Database.init
   true
 end
-
-module Apt
-
-  extend self
-
-  def ls
-    Apartment.database_names
-  end
-
-  def cd(database = Apartment.default_schema)
-    Apartment::Database.switch(database.strip)
-  end
-
-  def pwd
-    Apartment::Database.current
-  end
-
-end
