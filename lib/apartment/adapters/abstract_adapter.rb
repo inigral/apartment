@@ -106,9 +106,12 @@ module Apartment
       def import_database_schema(schema)
         ActiveRecord::Schema.verbose = false    # do not log schema load output.
 
+        old_paths = ActiveRecord::Migrator.migrations_paths
         ActiveRecord::Migrator.migrations_path = Apartment::Migrator.migrations_path(schema)
 
         load_or_abort(Apartment.schema_file(schema))
+
+        ActiveRecord::Migrator.migrations_paths = old_paths
       end
 
     protected
