@@ -79,7 +79,7 @@ module Apartment
         Apartment.connection.schema_search_path = full_search_path(options)
 
       rescue *rescuable_exceptions
-        raise SchemaNotFound, "One of the following schema(s) is invalid: #{full_search_path(options)}"
+        raise SchemaNotFound, "One of the following schema(s) is invalid: #{full_search_path(options) || database}"
       end
 
       #   Create the new schema
@@ -96,6 +96,7 @@ module Apartment
       #   Generate the final search path to set including persistent_schemas
       #
       def full_search_path(options = {})
+        return nil if @current_database.nil?
         db = @current_database.to_s
         persistent_schemas_list = Apartment.persistent_schemas.join(', ')
         if options[:skip_persistent] || persistent_schemas_list.empty?

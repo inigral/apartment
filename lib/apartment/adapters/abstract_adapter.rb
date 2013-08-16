@@ -96,7 +96,6 @@ module Apartment
       #   Load the rails seed file into the db
       #
       def seed_data(schema)
-        puts "Seeding #{current_database} with #{schema}"
         silence_stream(STDOUT){ load_or_abort("#{Rails.root}/db/seeds/#{schema}.rb") } # Don't log the output of seeding the db
       end
       alias_method :seed, :seed_data
